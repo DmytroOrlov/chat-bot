@@ -16,10 +16,12 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "com.example"
 ThisBuild / organizationName := "example"
 
-lazy val root = (project in file("."))
+lazy val `chat-bot` = (project in file("."))
   .settings(
-    name := "chat-bot",
+    scalacOptions += "-Ymacro-annotations",
     libraryDependencies ++= Seq(
+      Deps.zio,
+      Deps.zioMacros,
       Deps.distageCore,
       Deps.distageTestkitScalatest % Test,
     )
