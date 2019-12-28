@@ -1,12 +1,18 @@
 package livecode
 
+import java.time.LocalDateTime
+
 import livecode.code.program
 import zio._
 import zio.console._
 
 object code {
 
-  case class Bot(name: String)
+  case class Bot(
+      name: Option[String],
+      nextPidorOfTheDay: LocalDateTime,
+      nextSweetCoupleOfTheDay: LocalDateTime,
+  )
 
   sealed trait Action
 
