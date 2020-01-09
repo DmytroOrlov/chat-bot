@@ -2,34 +2,59 @@ package livecode
 
 import java.time.LocalDateTime
 
-import livecode.code.program
+import com.typesafe.scalalogging.StrictLogging
+import distage.{DIKey, GCMode, Injector, ModuleDef}
 import zio._
 import zio.console._
+import zio.macros.annotation.accessible
 
-object code {
+@accessible(">")
+trait Bot {
+  def prompt: UIO[Unit]
 
-  case class Bot(
-      name: Option[String],
-      nextHeroOfTheDay: LocalDateTime,
-      nextSweetCoupleOfTheDay: LocalDateTime,
-  )
+  def userInput: UIO[String]
 
-  sealed trait Action
+  def parseInput: UIO[String => UIO[Action]]
 
-  object EnterName extends Action
-
-  object SaveName extends Action
-
-  object ChooseHeroOfTheDay extends Action
-
-  object ChooseSweetCoupleOfTheDay extends Action
-
-  val program =
-    putStrLn("hello")
+  def applyAction: UIO[Action => UIO[Unit]]
 }
 
-object Main extends App {
-  def run(args: List[String]) =
-    program
-      .as(0)
+case class State(
+    name: Option[String],
+    nextHeroOfTheDay: LocalDateTime,
+    nextSweetCoupleOfTheDay: LocalDateTime,
+)
+
+object Bot {
+  val make =
+    (state: Ref[State]) =>
+      ZIO.access[Console] { env =>
+        new Bot {
+          def prompt: UIO[Unit] =
+            putStrLn("Enter your name")
+              .provide(env)
+
+          def userInput: UIO[String] = ???
+
+          def parseInput: UIO[String => UIO[Action]] = ???
+
+          def applyAction: UIO[Action => UIO[Unit]] = ???
+        }
+      }
+}
+
+object Main extends App with StrictLogging {
+  def run(args: List[String]) = {
+    val makeApp = putStrLn("hello").as(0)
+
+    val definition = new ModuleDef {
+      make[Console.Service[Any]].fromValue(Console.Live.console)
+      make[UIO[Int]].from(provideCake(makeApp.provide))
+    }
+
+    Injector()
+      .produceF[Task](definition, GCMode(DIKey.get[UIO[Int]]))
+      .use(_.get[UIO[Int]])
+      .catchAll(e => UIO(logger.error("failed to start", e)).as(1))
+  }
 }
