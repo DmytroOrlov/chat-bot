@@ -10,7 +10,7 @@ object code {
 
   case class Bot(
       name: Option[String],
-      nextPidorOfTheDay: LocalDateTime,
+      nextHeroOfTheDay: LocalDateTime,
       nextSweetCoupleOfTheDay: LocalDateTime,
   )
 
@@ -20,7 +20,7 @@ object code {
 
   object SaveName extends Action
 
-  object ChoosePidorOfTheDay extends Action
+  object ChooseHeroOfTheDay extends Action
 
   object ChooseSweetCoupleOfTheDay extends Action
 
