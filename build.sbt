@@ -1,5 +1,5 @@
 val V = new {
-  val distage = "0.10.0-M8"
+  val distage = "0.10.0-M10"
   val zio = "1.0.0-RC17"
   val zioMacros = "0.6.3-M1"
 }
