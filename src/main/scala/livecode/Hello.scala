@@ -10,13 +10,13 @@ import zio.macros.annotation.accessible
 
 @accessible(">")
 trait Bot {
-  def prompt: UIO[Unit]
+  def prompt: UIO[Unit] // depends on State
 
   def userInput: UIO[String]
 
   def parseInput: UIO[String => UIO[Action]]
 
-  def applyAction: UIO[Action => UIO[Unit]]
+  def applyAction: UIO[Action => UIO[Unit]] // changes State
 }
 
 case class State(
@@ -26,8 +26,8 @@ case class State(
 )
 
 object Bot {
-  val make =
-    (state: Ref[State]) =>
+  def make(state: UIO[Ref[State]]) =
+    state.flatMap { state =>
       ZIO.access[Console] { env =>
         new Bot {
           def prompt: UIO[Unit] =
@@ -41,13 +41,19 @@ object Bot {
           def applyAction: UIO[Action => UIO[Unit]] = ???
         }
       }
+    }
 }
 
 object Main extends App with StrictLogging {
   def run(args: List[String]) = {
-    val makeApp = putStrLn("hello").as(0)
+    val makeApp = Bot.>.prompt.as(0)
 
     val definition = new ModuleDef {
+      make[Bot].fromEffect(provideCake(
+        Bot.make(
+          Ref.make(State(None, LocalDateTime.now(), LocalDateTime.now()))
+        ).provide
+      ))
       make[Console.Service[Any]].fromValue(Console.Live.console)
       make[UIO[Int]].from(provideCake(makeApp.provide))
     }
